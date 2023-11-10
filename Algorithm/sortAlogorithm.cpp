@@ -1,6 +1,6 @@
 #include "sortAlogorithm.h"
 
-void paint(cv::Mat canvas, std::vector<int> arr, int s, int t1, int t2) {
+void paint(cv::Mat canvas, std::vector<int> arr, int s1, int t1, int t2) {
     canvas.setTo(cv::Scalar(0, 0, 0));
 
     cv::Scalar color;
@@ -8,7 +8,7 @@ void paint(cv::Mat canvas, std::vector<int> arr, int s, int t1, int t2) {
         if (i == t1 || i == t2) {
             color = cv::Scalar(0, 256, 0);
         }
-        else if (i == s) {
+        else if (i == s1) {
             color = cv::Scalar(0, 0, 256);
         }
         else {
@@ -25,8 +25,8 @@ void selectionSort(std::vector<int>& arr, cv::Mat canvas) {
     int n = arr.size();
     for (int i = 0; i < n; ++i) {
         int minIndex = i;
-        paint(canvas, arr, minIndex);
         for (int j = i + 1; j < n; ++j) {
+            paint(canvas, arr, minIndex, j);
             if (arr[j] < arr[minIndex]) {
                 minIndex = j;
                 paint(canvas, arr, minIndex);
@@ -77,14 +77,96 @@ void shellSort(std::vector<int>& arr, cv::Mat canvas) {
     int n = arr.size();
     for (int gap = n / 2; gap > 0; gap /= 2) {
         for (int i = gap; i < n; ++i) {
-            paint(canvas, arr, i);
-            for (int j = i; j >= gap && arr[j - gap] > arr[j]; j -= gap) {
-                paint(canvas, arr, -1, j, j - gap);
-                cv::waitKey(100);
-                std::swap(arr[j], arr[j - gap]);
-                paint(canvas, arr, -1, j, j - gap);
+            for (int j = i; j >= gap; j -= gap) {
+                paint(canvas, arr, -1, j);
+                if (arr[j - gap] > arr[j]) {
+                    cv::waitKey(100);
+                    std::swap(arr[j], arr[j - gap]);
+                    paint(canvas, arr, -1, j - gap);
+                }       
+                else {
+                    break;
+                }
             }
         }
+    }
+}
+
+// 5、归并排序
+void merge(std::vector<int>& arr, int left, int mid, int right, cv::Mat canvas) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    // 保存子数组
+    std::vector<int> L(n1), R(n2);
+    for (int i = 0; i < n1; i++) {
+        L[i] = arr[left + i];
+    }
+    for (int j = 0; j < n2; j++) {
+        R[j] = arr[mid + 1 + j];
+    }
+
+    // 合并两个子数组
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            paint(canvas, arr, -1, k);
+            arr[k] = L[i];
+            i++;
+        }
+        else {
+            paint(canvas, arr, -1, k);
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+    while (i < n1) {
+        paint(canvas, arr, -1, k);
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+    while (j < n2) {
+        paint(canvas, arr, -1, k);
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}
+
+void mergeSort(std::vector<int>& arr, int left, int right, cv::Mat canvas) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        mergeSort(arr, left, mid, canvas);
+        mergeSort(arr, mid + 1, right, canvas);
+        merge(arr, left, mid, right, canvas);
+    }
+}
+
+// 6、快速排序
+int partition(std::vector<int>& arr, int l, int r, cv::Mat canvas) {
+    // pivot 基准元素
+    int pivot = arr[r];
+    int i = l - 1;
+
+    for (int j = l; j < r; j++) {
+        paint(canvas, arr, r, i, j);
+        if (arr[j] < pivot) {
+            i++;
+            std::swap(arr[i], arr[j]);
+        }
+    }
+    paint(canvas, arr, -1, i + 1, r);
+    std::swap(arr[i + 1], arr[r]);
+    return i + 1;
+}
+
+void quickSort(std::vector<int>& arr, int l, int r, cv::Mat canvas) {
+    if (l < r) {
+        int pi = partition(arr, l, r, canvas);
+        quickSort(arr, l, pi - 1, canvas);
+        quickSort(arr, pi + 1, r, canvas);
     }
 }
 
@@ -104,6 +186,12 @@ void selectAlgorithm(int opt, std::vector<int> arr) {
         break;
     case 4:
         shellSort(arr, canvas);
+        break;
+    case 5:
+        mergeSort(arr, 0, arr.size() - 1, canvas);
+        break;
+    case 6:
+        quickSort(arr, 0, arr.size() - 1, canvas);
         break;
     default:
         break;
